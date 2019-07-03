@@ -11,9 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 )
 
-func GetTargetsAWS(list []target) []target {
-	resolver := endpoints.DefaultResolver()
-	partitions := resolver.(endpoints.EnumPartitions).Partitions()
+func getCredentialValue() credentials.Value{
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatal(err.Error())
@@ -24,6 +22,13 @@ func GetTargetsAWS(list []target) []target {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+	return credValue
+}
+
+func GetTargetsAWS(list []target) []target {
+	credValue := getCredentialValue()
+	resolver := endpoints.DefaultResolver()
+	partitions := resolver.(endpoints.EnumPartitions).Partitions()
 	sess, err := session.NewSession(&aws.Config{
 		Credentials: credentials.NewStaticCredentialsFromCreds(credValue)},
 	)
