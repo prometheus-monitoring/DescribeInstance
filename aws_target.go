@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -18,8 +19,18 @@ func GetTargetsAWS(list []target) []target {
 
 	resolver := endpoints.DefaultResolver()
 	partitions := resolver.(endpoints.EnumPartitions).Partitions()
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	credsDir := homeDir + "/.aws/credentials"
+	creds := credentials.NewSharedCredentials(credsDir, "default")
+	credValue, err := creds.Get()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 	sess, err := session.NewSession(&aws.Config{
-		Credentials: credentials.NewStaticCredentials("AKIAXP6JIVGTMPYIISX7", "0myxacGIWHqkLHjpLxYguREiK3nk+0ElsGXTrRqH", "")},
+		Credentials: credentials.NewStaticCredentialsFromCreds(credValue)},
 	)
 	if err != nil {
 		log.Fatal(err.Error())
