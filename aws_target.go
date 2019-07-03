@@ -12,11 +12,6 @@ import (
 )
 
 func GetTargetsAWS(list []target) []target {
-	// sess := session.Must(session.NewSessionWithOptions(session.Options{
-	// 	SharedConfigState: session.SharedConfigEnable,
-	// }))
-	// sess.Config.Region = aws.String("ap-south-1")
-
 	resolver := endpoints.DefaultResolver()
 	partitions := resolver.(endpoints.EnumPartitions).Partitions()
 	homeDir, err := os.UserHomeDir()
