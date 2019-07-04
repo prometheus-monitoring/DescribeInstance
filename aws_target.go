@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 )
 
-func getCredentialValue() credentials.Value{
+func getCredentialValue() credentials.Value {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatal(err.Error())
@@ -38,9 +38,9 @@ func GetTargetsAWS(list []target) []target {
 	for _, p := range partitions {
 		if p.ID() == "aws" {
 			for id, _ := range p.Regions() {
-				if id == "ap-south-1" || id == "ca-central-1" || id == "ap-east-1" {
-					continue
-				}
+				// if id == "ap-south-1" || id == "ca-central-1" || id == "ap-east-1" {
+				// 	continue
+				// }
 				sess.Config.Region = aws.String(id)
 				ec2Svc := ec2.New(sess)
 				params := &ec2.DescribeInstancesInput{
@@ -58,15 +58,18 @@ func GetTargetsAWS(list []target) []target {
 
 				for _, reservation := range output.Reservations {
 					for _, instance := range reservation.Instances {
-						var info instanceInfo
+						// var info instanceInfo
 						var t target
-						info.Zone = *instance.Placement.AvailabilityZone
-						info.Hostname = *instance.Tags[0].Value
-						info.IPprivate = *instance.PrivateIpAddress
-						info.IPpublic = *instance.PublicIpAddress
-						addr := info.IPpublic + ":11011"
+						t.Labels["zone"] = *instance.Placement.AvailabilityZone
+						t.Labels["hostname"] = *instance.Tags[0].Value
+						t.Labels["ip"] = *instance.PublicIpAddress
+						t.Labels["ip_priv"] = *instance.PrivateIpAddress
+						// info.Zone = *instance.Placement.AvailabilityZone
+						// info.Hostname = *instance.Tags[0].Value
+						// info.IPprivate = *instance.PrivateIpAddress
+						// info.IPpublic = *instance.PublicIpAddress
+						addr := t.Labels["ip"] + ":11011"
 						t.Targets = append(t.Targets, addr)
-						t.Labels = info
 						list = append(list, t)
 					}
 				}

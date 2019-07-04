@@ -6,23 +6,23 @@ import (
 	"log"
 )
 
-type instanceInfo struct {
-	// Project   string `json:"project"`
-	Zone      string `json:"zone"`
-	Hostname  string `json:"hostname"`
-	IPpublic  string `json:"ipPublic"`
-	IPprivate string `json:"ipPrivate"`
-}
+// type instanceInfo struct {
+// Project   string `json:"project"`
+// 	Zone      string `json:"zone"`
+// 	Hostname  string `json:"hostname"`
+// 	IPpublic  string `json:"ipPublic"`
+// 	IPprivate string `json:"ipPrivate"`
+// }
 
 type target struct {
-	Targets []interface{} `json:"target"`
-	Labels  instanceInfo  `json:"labels"`
+	Targets []string          `json:"target"`
+	Labels  map[string]string `json:"labels"`
 }
 
 func main() {
 	var listTargets []target
-	gcp := GetTargets(listTargets)
-	listTargets = append(listTargets, gcp...)
+	// gcp := GetTargets(listTargets)
+	// listTargets = append(listTargets, gcp...)
 	aws := GetTargetsAWS(listTargets)
 	listTargets = append(listTargets, aws...)
 	file, _ := json.MarshalIndent(listTargets, "", "\t")
