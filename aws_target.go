@@ -59,21 +59,18 @@ func GetTargetsAWS(list []target) []target {
 				for _, reservation := range output.Reservations {
 					for _, instance := range reservation.Instances {
 						// var info instanceInfo
-						var t target
-						labels := t.Labels{
-							"zone": *instance.Placement.AvailabilityZone
-						}
-						// t.Labels["zone"] = *instance.Placement.AvailabilityZone
-						labels["hostname"] = *instance.Tags[0].Value
-						labels["ip"] = *instance.PublicIpAddress
-						labels["ip_priv"] = *instance.PrivateIpAddress
+						t := new(target)
+						t.Labels["zone"] = *instance.Placement.AvailabilityZone
+						t.Labels["hostname"] = *instance.Tags[0].Value
+						t.Labels["ip"] = *instance.PublicIpAddress
+						t.Labels["ip_priv"] = *instance.PrivateIpAddress
 						// info.Zone = *instance.Placement.AvailabilityZone
 						// info.Hostname = *instance.Tags[0].Value
 						// info.IPprivate = *instance.PrivateIpAddress
 						// info.IPpublic = *instance.PublicIpAddress
 						addr := t.Labels["ip"] + ":11011"
 						t.Targets = append(t.Targets, addr)
-						list = append(list, t)
+						list = append(list, *t)
 					}
 				}
 			}

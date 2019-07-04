@@ -15,9 +15,11 @@ import (
 // }
 
 type target struct {
-	Targets []string          `json:"target"`
-	Labels  map[string]string `json:"labels"`
+	Targets []string `json:"target"`
+	Labels  LabelSet `json:"labels"`
 }
+
+type LabelSet map[string]string
 
 func main() {
 	var listTargets []target

@@ -37,14 +37,11 @@ func GetTargets(list []target) []target {
 			} else {
 				for _, instance := range instanceList.Items {
 					// var info instanceInfo
-					var t target
-					labels := t.Labels{
-						"zone": zone.Name
-					}
-					// t.Labels["zone"] = zone.Name
-					labels["hostname"] = instance.Name
-					labels["ip"] = instance.NetworkInterfaces[0].AccessConfigs[0].NatIP
-					labels["ip_priv"] = instance.NetworkInterfaces[0].NetworkIP
+					t := new(target)
+					t.Labels["zone"] = zone.Name
+					t.Labels["hostname"] = instance.Name
+					t.Labels["ip"] = instance.NetworkInterfaces[0].AccessConfigs[0].NatIP
+					t.Labels["ip_priv"] = instance.NetworkInterfaces[0].NetworkIP
 					// info.Project = "zingplayinternational-097"
 					// info.Zone = zone.Name
 					// info.Hostname = instance.Name
@@ -52,7 +49,7 @@ func GetTargets(list []target) []target {
 					// info.IPpublic = instance.NetworkInterfaces[0].AccessConfigs[0].NatIP
 					addr := t.Labels["ip"] + ":11011"
 					t.Targets = append(t.Targets, addr)
-					list = append(list, t)
+					list = append(list, *t)
 				}
 			}
 		}
