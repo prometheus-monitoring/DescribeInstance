@@ -10,7 +10,7 @@ import (
 	"google.golang.org/api/compute/v1"
 )
 
-func GetTargets(list []target) []target {
+func GetTargets() []target {
 	filters := [...]string{
 		"status = RUNNING",
 	}
@@ -27,25 +27,26 @@ func GetTargets(list []target) []target {
 	zoneList, err := zoneListCall.Do()
 	if err != nil {
 		log.Fatal(err)
-	} else {
-		for _, zone := range zoneList.Items {
-			instanceListCall := computeService.Instances.List("zingplayinternational-097", zone.Name)
-			instanceListCall.Filter(strings.Join(filters[:], " "))
-			instanceList, err := instanceListCall.Do()
-			if err != nil {
-				log.Fatal(err)
-			} else {
-				for _, instance := range instanceList.Items {
-					t := new(target)
-					t.Labels = make(map[string]string)
-					t.Labels["zone"] = zone.Name
-					t.Labels["hostname"] = instance.Name
-					t.Labels["ip"] = instance.NetworkInterfaces[0].AccessConfigs[0].NatIP
-					t.Labels["ip_priv"] = instance.NetworkInterfaces[0].NetworkIP
-					addr := t.Labels["ip"] + ":11011"
-					t.Targets = append(t.Targets, addr)
-					list = append(list, *t)
-				}
+	}
+	var list []target
+	for _, zone := range zoneList.Items {
+		instanceListCall := computeService.Instances.List("zingplayinternational-097", zone.Name)
+		instanceListCall.Filter(strings.Join(filters[:], " "))
+		instanceList, err := instanceListCall.Do()
+		if err != nil {
+			log.Fatal(err)
+		} else {
+			var list []target
+			for _, instance := range instanceList.Items {
+				t := new(target)
+				t.Labels = make(map[string]string)
+				t.Labels["zone"] = zone.Name
+				t.Labels["hostname"] = instance.Name
+				t.Labels["ip"] = instance.NetworkInterfaces[0].AccessConfigs[0].NatIP
+				t.Labels["ip_priv"] = instance.NetworkInterfaces[0].NetworkIP
+				addr := t.Labels["ip"] + ":11011"
+				t.Targets = append(t.Targets, addr)
+				list = append(list, *t)
 			}
 		}
 	}

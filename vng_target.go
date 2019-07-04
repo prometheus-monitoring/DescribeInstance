@@ -32,7 +32,7 @@ func connect() *sql.DB {
 	return db
 }
 
-func GetTargetsVNG(list []target) []target {
+func GetTargetsVNG() []target {
 	db := connect()
 	defer db.Close()
 	err := db.Ping()
@@ -45,6 +45,7 @@ func GetTargetsVNG(list []target) []target {
 		panic(err.Error())
 	}
 
+	var list []target
 	for results.Next() {
 		var info Info
 		var nics string
