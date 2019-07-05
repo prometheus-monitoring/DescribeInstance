@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"./lib"
+	"DescribeInstance/lib"
 )
 
 func writeFile(content []byte, dir string) {
