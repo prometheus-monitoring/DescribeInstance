@@ -12,9 +12,9 @@ var (
 )
 
 type Data struct {
-	VMServerName string `json:"vm_server_name"`
-	NICS         []nic  `json:"nics"`
-	Owners       []se   `json:technical_owner`
+	VMServerName string `json:"VMServerName"`
+	NICS         []nic  `json:"NICS"`
+	// Owners       []se   `json:"technical_owner"`
 }
 
 type nic struct {
@@ -29,10 +29,10 @@ type network struct {
 	IP       string `json:"ip_address"`
 }
 
-type se struct {
-	Role  string   `json:"role"`
-	Users []string `json:"users"`
-}
+// type se struct {
+// 	Role  string   `json:"role"`
+// 	Users []string `json:"users"`
+// }
 
 func connect() *sql.DB {
 	db, err := sql.Open("mysql", "discoverylocal:1qaz8ik,@tcp(127.0.0.1:3306)/getlistserver_sdk")
@@ -59,33 +59,36 @@ func (ts Targets) GetTargetsVNG() []Target {
 		panic(err.Error())
 	}
 
-	results, err := db.Query("SELECT Data FROM allserverinfo")
+	results, err := db.Query(`Select VMServerName, NICS from allserverinfo
+														where NOT Data like '%truongln%'
+															and NOT Data like '%phongnvd%'
+															and	NOT Data like '%vihct%'`)
 	if err != nil {
 		panic(err.Error())
 	}
 
 	for results.Next() {
 		var data Data
-		var dataString string
-		err = results.Scan(&dataString)
+		var nics string
+		err = results.Scan(&data.VMServerName, &nics)
 		if err != nil {
 			panic(err.Error())
 		}
-		err = json.Unmarshal([]byte(dataString), &data)
+		err = json.Unmarshal([]byte(nics), &data.NICS)
 		if err != nil {
 			panic(err.Error())
 		}
 
 		// Filter SE level 1
-		for _, owner := range data.Owners {
-			if owner.Role == "SE Level 1" {
-				for _, user := range owner.Users {
-					if filter(user) {
-						break
-					}
-				}
-			}
-		}
+		// for _, owner := range data.Owners {
+		// 	if owner.Role == "SE Level 1" {
+		// 		for _, user := range owner.Users {
+		// 			if filter(user) {
+		// 				break
+		// 			}
+		// 		}
+		// 	}
+		// }
 
 		t := new(Target)
 		t.Labels = make(map[string]string)
