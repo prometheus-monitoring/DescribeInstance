@@ -5,44 +5,42 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+
+	"./lib"
 )
 
-type target struct {
-	Targets []string `json:"target"`
-	Labels  LabelSet `json:"labels"`
+func writeFile(content []byte, dir string) {
+	err := ioutil.WriteFile(dir, content, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
-type LabelSet map[string]string
-type Targets []target
-
 func main() {
-	ts := new(Targets)
-	var content []byte
-	var filedir string
-
+	ts := new(lib.Targets)
+	desDir := "targets/"
 	switch arg := os.Args[1]; arg {
 	case "all":
 		fallthrough
 	case "aws":
-		content, _ = json.MarshalIndent(ts.GetTargetsAWS(), "", "\t")
-		filedir = "target_aws.json"
+		content, _ := json.MarshalIndent(ts.GetTargetsAWS(), "", "\t")
+		filedir := desDir + "target_aws.json"
+		go writeFile(content, filedir)
 		if arg != "all" {
 			break
 		}
 		fallthrough
 	case "gcp":
-		content, _ = json.MarshalIndent(ts.GetTargetsGCP(), "", "\t")
-		filedir = "target_gcp.json"
+		content, _ := json.MarshalIndent(ts.GetTargetsGCP(), "", "\t")
+		filedir := desDir + "target_gcp.json"
+		go writeFile(content, filedir)
 		if arg != "all" {
 			break
 		}
 		fallthrough
 	case "vng":
-		content, _ = json.MarshalIndent(ts.GetTargetsVNG(), "", "\t")
-		filedir = "target_vng.json"
-	}
-	err := ioutil.WriteFile(filedir, content, 0644)
-	if err != nil {
-		log.Fatal(err)
+		content, _ := json.MarshalIndent(ts.GetTargetsVNG(), "", "\t")
+		filedir := desDir + "target_vng.json"
+		go writeFile(content, filedir)
 	}
 }
