@@ -34,7 +34,7 @@ func main() {
 	case "aws":
 		content, _ := json.MarshalIndent(ts.GetTargetsAWS(), "", "\t")
 		filedir := desDir + "target_aws.json"
-		go writeFile(content, filedir)
+		writeFile(content, filedir)
 		if arg != "all" {
 			break
 		}
@@ -42,7 +42,7 @@ func main() {
 	case "gcp":
 		content, _ := json.MarshalIndent(ts.GetTargetsGCP(), "", "\t")
 		filedir := desDir + "target_gcp.json"
-		go writeFile(content, filedir)
+		writeFile(content, filedir)
 		if arg != "all" {
 			break
 		}
@@ -50,6 +50,6 @@ func main() {
 	case "vng":
 		content, _ := json.MarshalIndent(ts.GetTargetsVNG(), "", "\t")
 		filedir := desDir + "target_vng.json"
-		go writeFile(content, filedir)
+		writeFile(content, filedir)
 	}
 }
