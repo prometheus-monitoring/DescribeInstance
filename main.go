@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"sync"
 
 	"github.com/prometheus-monitoring/DescribeInstance/lib"
 )
@@ -26,30 +27,48 @@ func ensureDir(dir string) error {
 
 func main() {
 	ts := new(lib.Targets)
+
+	var wg sync.WaitGroup
+
 	desDir := "targets/"
 	ensureDir(desDir)
+
 	switch arg := os.Args[1]; arg {
 	case "all":
+		wg.Add(3)
 		fallthrough
 	case "aws":
+		wg.Add(1)
 		content, _ := json.MarshalIndent(ts.GetTargetsAWS(), "", "\t")
 		filedir := desDir + "target_aws.json"
-		writeFile(content, filedir)
+		go func() {
+			defer wg.Done()
+			writeFile(content, filedir)
+		}()
 		if arg != "all" {
 			break
 		}
 		fallthrough
 	case "gcp":
+		wg.Add(1)
 		content, _ := json.MarshalIndent(ts.GetTargetsGCP(), "", "\t")
 		filedir := desDir + "target_gcp.json"
-		writeFile(content, filedir)
+		go func() {
+			defer wg.Done()
+			writeFile(content, filedir)
+		}()
 		if arg != "all" {
 			break
 		}
 		fallthrough
 	case "vng":
+		wg.Add(1)
 		content, _ := json.MarshalIndent(ts.GetTargetsVNG(), "", "\t")
 		filedir := desDir + "target_vng.json"
-		writeFile(content, filedir)
+		go func() {
+			defer wg.Done()
+			writeFile(content, filedir)
+		}()
 	}
+	wg.Wait()
 }
