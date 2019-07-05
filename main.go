@@ -40,7 +40,7 @@ func main() {
 	case "aws":
 		wg.Add(1)
 		content, _ := json.MarshalIndent(ts.GetTargetsAWS(), "", "\t")
-		filedir := desDir + "target_aws.json"
+		filedir := desDir + "targets_aws.json"
 		go func() {
 			defer wg.Done()
 			writeFile(content, filedir)
@@ -52,7 +52,7 @@ func main() {
 	case "gcp":
 		wg.Add(1)
 		content, _ := json.MarshalIndent(ts.GetTargetsGCP(), "", "\t")
-		filedir := desDir + "target_gcp.json"
+		filedir := desDir + "targets_gcp.json"
 		go func() {
 			defer wg.Done()
 			writeFile(content, filedir)
@@ -64,7 +64,7 @@ func main() {
 	case "vng":
 		wg.Add(1)
 		content, _ := json.MarshalIndent(ts.GetTargetsVNG(), "", "\t")
-		filedir := desDir + "target_vng.json"
+		filedir := desDir + "targets_vng.json"
 		go func() {
 			defer wg.Done()
 			writeFile(content, filedir)
