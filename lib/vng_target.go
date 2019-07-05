@@ -69,7 +69,12 @@ func (ts Targets) GetTargetsVNG() []Target {
 				}
 			}
 		}
+
 		addr := t.Labels["ip"] + ":11011"
+		if _, ok := t.Labels["ip"]; !ok {
+			addr = t.Labels["ip_priv"] + ":11011"
+		}
+
 		t.Targets = append(t.Targets, addr)
 		ts = append(ts, *t)
 	}
