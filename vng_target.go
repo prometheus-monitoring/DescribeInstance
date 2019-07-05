@@ -32,7 +32,7 @@ func connect() *sql.DB {
 	return db
 }
 
-func GetTargetsVNG() []target {
+func (ts Targets) GetTargetsVNG() []target {
 	db := connect()
 	defer db.Close()
 	err := db.Ping()
@@ -45,7 +45,6 @@ func GetTargetsVNG() []target {
 		panic(err.Error())
 	}
 
-	var list []target
 	for results.Next() {
 		var info Info
 		var nics string
@@ -72,7 +71,7 @@ func GetTargetsVNG() []target {
 		}
 		addr := t.Labels["ip"] + ":11011"
 		t.Targets = append(t.Targets, addr)
-		list = append(list, *t)
+		ts = append(ts, *t)
 	}
-	return list
+	return ts
 }

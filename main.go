@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"os"
 )
 
 type target struct {
@@ -12,17 +13,35 @@ type target struct {
 }
 
 type LabelSet map[string]string
+type Targets []target
 
 func main() {
-	var listTargets []target
-	gcp := GetTargets()
-	listTargets = append(listTargets, gcp...)
-	aws := GetTargetsAWS()
-	listTargets = append(listTargets, aws...)
-	vng := GetTargetsVNG()
-	listTargets = append(listTargets, vng...)
-	file, _ := json.MarshalIndent(listTargets, "", "\t")
-	err := ioutil.WriteFile("target.json", file, 0644)
+	ts := new(Targets)
+	var content []byte
+	var filedir string
+
+	switch arg := os.Args[1]; arg {
+	case "all":
+		fallthrough
+	case "aws":
+		content, _ = json.MarshalIndent(ts.GetTargetsAWS(), "", "\t")
+		filedir = "target_aws.json"
+		if arg != "all" {
+			break
+		}
+		fallthrough
+	case "gcp":
+		content, _ = json.MarshalIndent(ts.GetTargetsGCP(), "", "\t")
+		filedir = "target_gcp.json"
+		if arg != "all" {
+			break
+		}
+		fallthrough
+	case "vng":
+		content, _ = json.MarshalIndent(ts.GetTargetsVNG(), "", "\t")
+		filedir = "target_vng.json"
+	}
+	err := ioutil.WriteFile(filedir, content, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}

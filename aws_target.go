@@ -25,7 +25,7 @@ func getCredentialValue() credentials.Value {
 	return credValue
 }
 
-func GetTargetsAWS() []target {
+func (ts Targets) GetTargetsAWS() []target {
 	credValue := getCredentialValue()
 	resolver := endpoints.DefaultResolver()
 	partitions := resolver.(endpoints.EnumPartitions).Partitions()
@@ -35,7 +35,7 @@ func GetTargetsAWS() []target {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	var list []target
+
 	for _, p := range partitions {
 		if p.ID() == "aws" {
 			for id, _ := range p.Regions() {
@@ -68,11 +68,11 @@ func GetTargetsAWS() []target {
 						t.Labels["ip_priv"] = *instance.PrivateIpAddress
 						addr := t.Labels["ip"] + ":11011"
 						t.Targets = append(t.Targets, addr)
-						list = append(list, *t)
+						ts = append(ts, *t)
 					}
 				}
 			}
 		}
 	}
-	return list
+	return ts
 }

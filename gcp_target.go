@@ -10,7 +10,7 @@ import (
 	"google.golang.org/api/compute/v1"
 )
 
-func GetTargets() []target {
+func (ts Targets) GetTargetsGCP() []target {
 	filters := [...]string{
 		"status = RUNNING",
 	}
@@ -28,7 +28,7 @@ func GetTargets() []target {
 	if err != nil {
 		log.Fatal(err)
 	}
-	var list []target
+
 	for _, zone := range zoneList.Items {
 		instanceListCall := computeService.Instances.List("zingplayinternational-097", zone.Name)
 		instanceListCall.Filter(strings.Join(filters[:], " "))
@@ -36,7 +36,6 @@ func GetTargets() []target {
 		if err != nil {
 			log.Fatal(err)
 		} else {
-			var list []target
 			for _, instance := range instanceList.Items {
 				t := new(target)
 				t.Labels = make(map[string]string)
@@ -46,9 +45,9 @@ func GetTargets() []target {
 				t.Labels["ip_priv"] = instance.NetworkInterfaces[0].NetworkIP
 				addr := t.Labels["ip"] + ":11011"
 				t.Targets = append(t.Targets, addr)
-				list = append(list, *t)
+				ts = append(ts, *t)
 			}
 		}
 	}
-	return list
+	return ts
 }
