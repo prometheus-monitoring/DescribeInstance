@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"DescribeInstance/lib"
+	"github.com/prometheus-monitoring/DescribeInstance/lib"
 )
 
 func writeFile(content []byte, dir string) {
@@ -16,9 +16,18 @@ func writeFile(content []byte, dir string) {
 	}
 }
 
+func ensureDir(dir string) error {
+	err := os.MkdirAll(dir, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func main() {
 	ts := new(lib.Targets)
 	desDir := "targets/"
+	ensureDir(desDir)
 	switch arg := os.Args[1]; arg {
 	case "all":
 		fallthrough

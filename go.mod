@@ -1,4 +1,4 @@
-module gettargets
+module github.com/prometheus-monitoring/DescribeInstance
 
 go 1.12
 

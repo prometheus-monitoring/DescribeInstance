@@ -7,4 +7,4 @@ type Target struct {
 
 type LabelSet map[string]string
 
-type Targets []target
+type Targets []Target
