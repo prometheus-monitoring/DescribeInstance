@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/prometheus-monitoring/DescribeInstance/lib"
+	"github.com/sirupsen/logrus"
 )
 
 func writeFile(content []byte, dir string) {
@@ -26,8 +27,13 @@ func ensureDir(dir string) error {
 }
 
 func main() {
-	ts := new(lib.Targets)
+	// New logger
+	logrus.SetFormatter(&logrus.TextFormatter{})
+	var loglevel = logrus.New()
+	loglevel.Out = os.Stdout
 
+	// New targets
+	ts := new(lib.Targets)
 	var wg sync.WaitGroup
 
 	desDir := "targets/"
@@ -39,11 +45,18 @@ func main() {
 		fallthrough
 	case "aws":
 		wg.Add(1)
-		content, _ := json.MarshalIndent(ts.GetTargetsAWS(), "", "\t")
-		filedir := desDir + "targets_aws.json"
 		go func() {
 			defer wg.Done()
-			writeFile(content, filedir)
+			targets, err := ts.GetTargetsAWS(loglevel)
+			if err == nil {
+				content, _ := json.MarshalIndent(targets, "", "\t")
+				filedir := desDir + "targets_aws.json"
+				loglevel.Info("Write all targets on aws to json file")
+				writeFile(content, filedir)
+				loglevel.Info("Write targets on aws completed")
+			} else {
+				loglevel.Error(err)
+			}
 		}()
 		if arg != "all" {
 			break
@@ -51,11 +64,18 @@ func main() {
 		fallthrough
 	case "gcp":
 		wg.Add(1)
-		content, _ := json.MarshalIndent(ts.GetTargetsGCP(), "", "\t")
-		filedir := desDir + "targets_gcp.json"
 		go func() {
 			defer wg.Done()
-			writeFile(content, filedir)
+			targets, err := ts.GetTargetsGCP(loglevel)
+			if err == nil {
+				content, _ := json.MarshalIndent(targets, "", "\t")
+				filedir := desDir + "targets_gcp.json"
+				loglevel.Info("Write all targets on gcp to json file")
+				writeFile(content, filedir)
+				loglevel.Info("Write targets on gcp completed")
+			} else {
+				loglevel.Error(err)
+			}
 		}()
 		if arg != "all" {
 			break
@@ -63,11 +83,18 @@ func main() {
 		fallthrough
 	case "vng":
 		wg.Add(1)
-		content, _ := json.MarshalIndent(ts.GetTargetsVNG(), "", "\t")
-		filedir := desDir + "targets_vng.json"
 		go func() {
 			defer wg.Done()
-			writeFile(content, filedir)
+			targets, err := ts.GetTargetsVNG(loglevel)
+			if err == nil {
+				content, _ := json.MarshalIndent(targets, "", "\t")
+				filedir := desDir + "targets_vng.json"
+				loglevel.Info("Write all targets on datacenter vng to json file")
+				writeFile(content, filedir)
+				loglevel.Info("Write targets on datacenter vng completed")
+			} else {
+				loglevel.Error(err)
+			}
 		}()
 	}
 	wg.Wait()

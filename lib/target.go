@@ -1,7 +1,7 @@
 package lib
 
 type Target struct {
-	Targets []string `json:"target"`
+	Targets []string `json:"targets"`
 	Labels  LabelSet `json:"labels"`
 }
 

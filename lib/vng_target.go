@@ -5,10 +5,7 @@ import (
 	"encoding/json"
 
 	_ "github.com/go-sql-driver/mysql"
-)
-
-var (
-	SELV1 = [...]string{"phongnvd@vng.com.vn", "vihct@vng.com.vn", "truongln@vng.com.vn"}
+	"github.com/sirupsen/logrus"
 )
 
 type Data struct {
@@ -34,39 +31,33 @@ type network struct {
 // 	Users []string `json:"users"`
 // }
 
-func connect() *sql.DB {
+func connect() (*sql.DB, error) {
 	db, err := sql.Open("mysql", "discoverylocal:1qaz8ik,@tcp(127.0.0.1:3306)/getlistserver_sdk")
-	if err != nil {
-		panic(err.Error())
-	}
-	return db
+	return db, err
 }
 
-func filter(name string) bool {
-	for _, owner := range SELV1 {
-		if name == owner {
-			return true
-		}
-	}
-	return false
-}
-
-func (ts Targets) GetTargetsVNG() []Target {
-	db := connect()
+func (ts Targets) GetTargetsVNG(loglevel *logrus.Logger) ([]Target, error) {
+	loglevel.Info("[vng] Establishing connection to database")
+	db, err := connect()
 	defer db.Close()
-	err := db.Ping()
 	if err != nil {
-		panic(err.Error())
+		return ts, err
 	}
-
+	loglevel.Info("[vng] Ensure the connection is established")
+	err = db.Ping()
+	if err != nil {
+		return ts, err
+	}
+	loglevel.Info("[vng] Query data")
 	results, err := db.Query(`Select VMServerName, NICS from allserverinfo
 														where NOT Data like '%truongln%'
 															and NOT Data like '%phongnvd%'
 															and	NOT Data like '%vihct%'`)
 	if err != nil {
-		panic(err.Error())
+		return ts, err
 	}
 
+	loglevel.Info("[vng] Create list targets")
 	for results.Next() {
 		var data Data
 		var nics string
@@ -106,11 +97,15 @@ func (ts Targets) GetTargetsVNG() []Target {
 
 		addr := t.Labels["ip"] + ":11011"
 		if _, ok := t.Labels["ip"]; !ok {
-			addr = t.Labels["ip_priv"] + ":11011"
+			if _, ok := t.Labels["ip_priv"]; ok {
+				addr = t.Labels["ip_priv"] + ":11011"
+			} else {
+				continue
+			}
 		}
 
 		t.Targets = append(t.Targets, addr)
 		ts = append(ts, *t)
 	}
-	return ts
+	return ts, err
 }

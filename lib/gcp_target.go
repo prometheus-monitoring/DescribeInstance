@@ -1,16 +1,16 @@
 package lib
 
 import (
-	"log"
 	"strings"
 
+	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/compute/v1"
 )
 
-func (ts Targets) GetTargetsGCP() []Target {
+func (ts Targets) GetTargetsGCP(loglevel *logrus.Logger) ([]Target, error) {
 	filters := [...]string{
 		"status = RUNNING",
 	}
@@ -19,35 +19,36 @@ func (ts Targets) GetTargetsGCP() []Target {
 
 	c, err := google.DefaultClient(ctx, cloudresourcemanager.CloudPlatformScope)
 	if err != nil {
-		log.Fatal(err)
+		return ts, err
 	}
-
 	computeService, err := compute.New(c)
+	loglevel.Info("[gcp] Get list zones on project zingplayinternational-097")
 	zoneListCall := computeService.Zones.List("zingplayinternational-097")
 	zoneList, err := zoneListCall.Do()
 	if err != nil {
-		log.Fatal(err)
+		return ts, nil
 	}
-
 	for _, zone := range zoneList.Items {
 		instanceListCall := computeService.Instances.List("zingplayinternational-097", zone.Name)
 		instanceListCall.Filter(strings.Join(filters[:], " "))
+		loglevel.Infof("[gcp] Get list instances in zone %s", zone.Name)
 		instanceList, err := instanceListCall.Do()
 		if err != nil {
-			log.Fatal(err)
-		} else {
-			for _, instance := range instanceList.Items {
-				t := new(Target)
-				t.Labels = make(map[string]string)
-				t.Labels["zone"] = zone.Name
-				t.Labels["hostname"] = instance.Name
-				t.Labels["ip"] = instance.NetworkInterfaces[0].AccessConfigs[0].NatIP
-				t.Labels["ip_priv"] = instance.NetworkInterfaces[0].NetworkIP
-				addr := t.Labels["ip"] + ":11011"
-				t.Targets = append(t.Targets, addr)
-				ts = append(ts, *t)
-			}
+			loglevel.Error(err)
+			continue
+		}
+		loglevel.Info("[gcp] Create list targets")
+		for _, instance := range instanceList.Items {
+			t := new(Target)
+			t.Labels = make(map[string]string)
+			t.Labels["zone"] = zone.Name
+			t.Labels["hostname"] = instance.Name
+			t.Labels["ip"] = instance.NetworkInterfaces[0].AccessConfigs[0].NatIP
+			t.Labels["ip_priv"] = instance.NetworkInterfaces[0].NetworkIP
+			addr := t.Labels["ip"] + ":11011"
+			t.Targets = append(t.Targets, addr)
+			ts = append(ts, *t)
 		}
 	}
-	return ts
+	return ts, err
 }
