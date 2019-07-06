@@ -55,7 +55,9 @@ func main() {
 		wg.Add(3)
 		fallthrough
 	case getFromAWSCmd.FullCommand():
-		wg.Add(1)
+		if !strings.Contains(parsedCmd, "all") {
+			wg.Add(1)
+		}
 		go func() {
 			defer wg.Done()
 			targets, err := ts.GetTargetsAWS(loglevel)
@@ -78,7 +80,9 @@ func main() {
 		}
 		fallthrough
 	case getFromGCPCmd.FullCommand():
-		wg.Add(1)
+		if !strings.Contains(parsedCmd, "all") {
+			wg.Add(1)
+		}
 		go func() {
 			defer wg.Done()
 			targets, err := ts.GetTargetsGCP(loglevel)
@@ -101,7 +105,9 @@ func main() {
 		}
 		fallthrough
 	case getFromVNGCmd.FullCommand():
-		wg.Add(1)
+		if !strings.Contains(parsedCmd, "all") {
+			wg.Add(1)
+		}
 		go func() {
 			defer wg.Done()
 			targets, err := ts.GetTargetsVNG(loglevel)

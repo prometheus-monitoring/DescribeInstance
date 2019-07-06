@@ -69,8 +69,8 @@ func (ts Targets) GetTargetsAWS(loglevel *logrus.Logger) ([]Target, error) {
 						for _, instance := range reservation.Instances {
 							t := new(Target)
 							t.Labels = make(map[string]string)
-							t.Labels["zone"] = *instance.Placement.AvailabilityZone
-							t.Labels["hostname"] = *instance.Tags[0].Value
+							// t.Labels["zone"] = *instance.Placement.AvailabilityZone
+							t.Labels["instance"] = *instance.Tags[0].Value
 							t.Labels["product_code"] = "ZPTGSN"
 							t.Labels["ip"] = *instance.PublicIpAddress
 							t.Labels["ip_priv"] = *instance.PrivateIpAddress

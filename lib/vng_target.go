@@ -85,7 +85,7 @@ func (ts Targets) GetTargetsVNG(loglevel *logrus.Logger) ([]Target, error) {
 		t := new(Target)
 		t.Labels = make(map[string]string)
 		// t.Labels["zone"] =
-		t.Labels["hostname"] = data.VMServerName
+		t.Labels["instance"] = data.VMServerName
 		t.Labels["product_code"] = data.ProductCode
 		for _, nic := range data.NICS {
 			for _, net := range nic.Nets {
