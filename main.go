@@ -3,27 +3,24 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/prometheus-monitoring/DescribeInstance/lib"
 	"github.com/sirupsen/logrus"
+	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
-func writeFile(content []byte, dir string) {
+func writeFile(content []byte, dir string) error {
 	err := ioutil.WriteFile(dir, content, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
+	return err
 }
 
 func ensureDir(dir string) error {
 	err := os.MkdirAll(dir, os.ModePerm)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func main() {
@@ -32,6 +29,20 @@ func main() {
 	var loglevel = logrus.New()
 	loglevel.Out = os.Stdout
 
+	//Parse flag
+	app := kingpin.New(filepath.Base(os.Args[0]), "Script get describe instance from cloud server")
+	app.HelpFlag.Short('h')
+
+	getFromAllCmd := app.Command("all", "Get describe instance from all aws, gcp, vng")
+	getFromAWSCmd := app.Command("aws", "Get describe instance from aws")
+	getFromGCPCmd := app.Command("gcp", "Get describe instance from gcp")
+	getFromVNGCmd := app.Command("vng", "Get describe instance from vng")
+	// configFiles := getFromGCPCmd.Arg(
+	// 	"config-files",
+	// 	"The config files to check.",
+	// ).Required().ExistingFiles()
+	parsedCmd := kingpin.MustParse(app.Parse(os.Args[1:]))
+
 	// New targets
 	ts := new(lib.Targets)
 	var wg sync.WaitGroup
@@ -39,11 +50,11 @@ func main() {
 	desDir := "targets/"
 	ensureDir(desDir)
 
-	switch arg := os.Args[1]; arg {
-	case "all":
+	switch parsedCmd {
+	case getFromAllCmd.FullCommand():
 		wg.Add(3)
 		fallthrough
-	case "aws":
+	case getFromAWSCmd.FullCommand():
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -52,17 +63,21 @@ func main() {
 				content, _ := json.MarshalIndent(targets, "", "\t")
 				filedir := desDir + "targets_aws.json"
 				loglevel.Info("Write all targets on aws to json file")
-				writeFile(content, filedir)
-				loglevel.Info("Write targets on aws completed")
+				err = writeFile(content, filedir)
+				if err != nil {
+					loglevel.Error(err)
+				} else {
+					loglevel.Info("Write targets on datacenter vng completed")
+				}
 			} else {
 				loglevel.Error(err)
 			}
 		}()
-		if arg != "all" {
+		if !strings.Contains(parsedCmd, "all") {
 			break
 		}
 		fallthrough
-	case "gcp":
+	case getFromGCPCmd.FullCommand():
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -71,17 +86,21 @@ func main() {
 				content, _ := json.MarshalIndent(targets, "", "\t")
 				filedir := desDir + "targets_gcp.json"
 				loglevel.Info("Write all targets on gcp to json file")
-				writeFile(content, filedir)
-				loglevel.Info("Write targets on gcp completed")
+				err = writeFile(content, filedir)
+				if err != nil {
+					loglevel.Error(err)
+				} else {
+					loglevel.Info("Write targets on datacenter vng completed")
+				}
 			} else {
 				loglevel.Error(err)
 			}
 		}()
-		if arg != "all" {
+		if !strings.Contains(parsedCmd, "all") {
 			break
 		}
 		fallthrough
-	case "vng":
+	case getFromVNGCmd.FullCommand():
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -90,8 +109,12 @@ func main() {
 				content, _ := json.MarshalIndent(targets, "", "\t")
 				filedir := desDir + "targets_vng.json"
 				loglevel.Info("Write all targets on datacenter vng to json file")
-				writeFile(content, filedir)
-				loglevel.Info("Write targets on datacenter vng completed")
+				err = writeFile(content, filedir)
+				if err != nil {
+					loglevel.Error(err)
+				} else {
+					loglevel.Info("Write targets on datacenter vng completed")
+				}
 			} else {
 				loglevel.Error(err)
 			}
