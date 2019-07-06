@@ -33,7 +33,7 @@ type network struct {
 // }
 
 func connect() (*sql.DB, error) {
-	db, err := sql.Open("mysql", "discoverylocal:1qaz8ik,@tcp(127.0.0.1:3306)/getlistserver_sdk")
+	db, err := sql.Open("mysql", "discoverylocal:1qaz8ik,@tcp(61.28.251.123)/getlistserver_sdk")
 	return db, err
 }
 

@@ -47,7 +47,7 @@ func main() {
 	ts := new(lib.Targets)
 	var wg sync.WaitGroup
 
-	desDir := "targets/"
+	desDir := "/etc/prometheus/targets/"
 	ensureDir(desDir)
 
 	switch parsedCmd {
