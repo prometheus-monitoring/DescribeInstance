@@ -10,6 +10,7 @@ import (
 
 type Data struct {
 	VMServerName string `json:"VMServerName"`
+	ProductCode  string `json:"ProductAlias"`
 	NICS         []nic  `json:"NICS"`
 	// Owners       []se   `json:"technical_owner"`
 }
@@ -49,7 +50,7 @@ func (ts Targets) GetTargetsVNG(loglevel *logrus.Logger) ([]Target, error) {
 		return ts, err
 	}
 	loglevel.Info("[vng] Query data")
-	results, err := db.Query(`Select VMServerName, NICS from allserverinfo
+	results, err := db.Query(`Select VMServerName, ProductAlias, NICS from allserverinfo
 														where NOT Data like '%truongln%'
 															and NOT Data like '%phongnvd%'
 															and	NOT Data like '%vihct%'`)
@@ -61,7 +62,7 @@ func (ts Targets) GetTargetsVNG(loglevel *logrus.Logger) ([]Target, error) {
 	for results.Next() {
 		var data Data
 		var nics string
-		err = results.Scan(&data.VMServerName, &nics)
+		err = results.Scan(&data.VMServerName, &data.ProductCode, &nics)
 		if err != nil {
 			panic(err.Error())
 		}
@@ -85,6 +86,7 @@ func (ts Targets) GetTargetsVNG(loglevel *logrus.Logger) ([]Target, error) {
 		t.Labels = make(map[string]string)
 		// t.Labels["zone"] =
 		t.Labels["hostname"] = data.VMServerName
+		t.Labels["product_code"] = data.ProductCode
 		for _, nic := range data.NICS {
 			for _, net := range nic.Nets {
 				if net.VlanType == "public" && (t.Labels["ip"] == "" || t.Labels["ip_priv"] == "") {
