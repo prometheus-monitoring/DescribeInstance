@@ -63,7 +63,7 @@ func (ts Targets) GetTargetsVNG(loglevel *logrus.Logger) ([]Target, error) {
 	for results.Next() {
 		var data Data
 		var nics string
-		err = results.Scan(&data.VMServerName, &data.ProductCode, &data.LocationCode, &nics)
+		err = results.Scan(&data.VMServerName, &data.ProductCode, &data.Location, &nics)
 		if err != nil {
 			panic(err.Error())
 		}
