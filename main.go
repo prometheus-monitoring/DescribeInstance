@@ -113,32 +113,32 @@ func main() {
 		// if !strings.Contains(parsedCmd, "all") {
 		// 	wg.Add(1)
 		// }
-		// go func() {
-		// 	defer wg.Done()
-		for _, location := range locationsVN {
-			targets, err := ts.GetTargetsVNG(logLevel, location)
-			if err == nil {
-				content, _ := json.MarshalIndent(targets, "", "\t")
-				var fileDir string
-				if strings.Contains(location, "T1") {
-					fileDir = fmt.Sprintf("%stargets_vng_%s.json", desDir, "oldfarm")
-				} else if strings.Contains(location, "T2") {
-					fileDir = fmt.Sprintf("%stargets_vng_%s.json", desDir, "newfarm")
+		go func() {
+			defer wg.Done()
+			for _, location := range locationsVN {
+				targets, err := ts.GetTargetsVNG(logLevel, location)
+				if err == nil {
+					content, _ := json.MarshalIndent(targets, "", "\t")
+					var fileDir string
+					if strings.Contains(location, "T1") {
+						fileDir = fmt.Sprintf("%stargets_vng_%s.json", desDir, "oldfarm")
+					} else if strings.Contains(location, "T2") {
+						fileDir = fmt.Sprintf("%stargets_vng_%s.json", desDir, "newfarm")
+					} else {
+						fileDir = fmt.Sprintf("%stargets_vng_%s.json", desDir, "singapore")
+					}
+					logLevel.Info("Write all targets on datacenter vng to json file")
+					err = writeFile(content, fileDir)
+					if err != nil {
+						logLevel.Error(err)
+					} else {
+						logLevel.Info("Write targets on datacenter vng completed")
+					}
 				} else {
-					fileDir = fmt.Sprintf("%stargets_vng_%s.json", desDir, "singapore")
-				}
-				logLevel.Info("Write all targets on datacenter vng to json file")
-				err = writeFile(content, fileDir)
-				if err != nil {
 					logLevel.Error(err)
-				} else {
-					logLevel.Info("Write targets on datacenter vng completed")
 				}
-			} else {
-				logLevel.Error(err)
 			}
-		}
-		// }()
+		}()
 	}
 	wg.Wait()
 }
