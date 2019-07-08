@@ -3,6 +3,7 @@ package lib
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/sirupsen/logrus"
@@ -38,28 +39,56 @@ func connect() (*sql.DB, error) {
 	return db, err
 }
 
-func (ts Targets) GetTargetsVNG(loglevel *logrus.Logger) ([]Target, error) {
-	loglevel.Info("[vng] Establishing connection to database")
+func querydata(db *sql.DB, locationCode string) (*sql.Rows, error) {
+	queryStatement := fmt.Sprintf(`Select VMServerName, ProductAlias, LocationCode, NICS from allserverinfo
+																		where NOT Data like '%s'
+																			and NOT Data like '%s'
+																			and	NOT Data like '%s'
+																			and LocationCode='%s'`, "%truongln%", "%phongnvd%", "%vihct%", locationCode)
+	results, err := db.Query(queryStatement)
+	return results, err
+}
+
+func (t *Target) append(d Data) Target {
+	t.Labels = make(map[string]string)
+	t.Labels["instance"] = d.VMServerName
+	t.Labels["product_code"] = d.ProductCode
+	for _, nic := range d.NICS {
+		for _, net := range nic.Nets {
+			if net.VlanType == "public" && (t.Labels["ip"] == "" || t.Labels["ip_priv"] == "") {
+				t.Labels["ip"] = net.IP
+			} else {
+				t.Labels["ip_priv"] = net.IP
+			}
+		}
+	}
+	t.Labels["location_code"] = "vng_" + d.Location
+	addr := t.Labels["ip_priv"] + ":11011"
+
+	t.Targets = append(t.Targets, addr)
+	return *t
+}
+
+func (ts Targets) GetTargetsVNG(logLevel *logrus.Logger, locationCode string) ([]Target, error) {
+	logLevel.Info("[vng] Establishing connection to database")
 	db, err := connect()
 	defer db.Close()
 	if err != nil {
 		return ts, err
 	}
-	loglevel.Info("[vng] Ensure the connection is established")
+	logLevel.Info("[vng] Ensure the connection is established")
 	err = db.Ping()
 	if err != nil {
 		return ts, err
 	}
-	loglevel.Info("[vng] Query data")
-	results, err := db.Query(`Select VMServerName, ProductAlias, LocationCode, NICS from allserverinfo
-														where NOT Data like '%truongln%'
-															and NOT Data like '%phongnvd%'
-															and	NOT Data like '%vihct%'`)
+
+	logLevel.Info("[vng] Query data")
+	results, err := querydata(db, locationCode)
 	if err != nil {
 		return ts, err
 	}
 
-	loglevel.Info("[vng] Create list targets")
+	logLevel.Info("[vng] Create list targets")
 	for results.Next() {
 		var data Data
 		var nics string
@@ -71,37 +100,8 @@ func (ts Targets) GetTargetsVNG(loglevel *logrus.Logger) ([]Target, error) {
 		if err != nil {
 			panic(err.Error())
 		}
-
-		// Filter SE level 1
-		// for _, owner := range data.Owners {
-		// 	if owner.Role == "SE Level 1" {
-		// 		for _, user := range owner.Users {
-		// 			if filter(user) {
-		// 				break
-		// 			}
-		// 		}
-		// 	}
-		// }
-
 		t := new(Target)
-		t.Labels = make(map[string]string)
-		// t.Labels["zone"] =
-		t.Labels["instance"] = data.VMServerName
-		t.Labels["product_code"] = data.ProductCode
-		for _, nic := range data.NICS {
-			for _, net := range nic.Nets {
-				if net.VlanType == "public" && (t.Labels["ip"] == "" || t.Labels["ip_priv"] == "") {
-					t.Labels["ip"] = net.IP
-				} else {
-					t.Labels["ip_priv"] = net.IP
-				}
-			}
-		}
-		t.Labels["location_code"] = "vng_" + data.Location
-		addr := t.Labels["ip_priv"] + ":11011"
-
-		t.Targets = append(t.Targets, addr)
-		ts = append(ts, *t)
+		ts = append(ts, t.append(data))
 	}
 	return ts, err
 }

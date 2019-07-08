@@ -10,7 +10,7 @@ import (
 	"google.golang.org/api/compute/v1"
 )
 
-func (ts Targets) GetTargetsGCP(loglevel *logrus.Logger) ([]Target, error) {
+func (ts Targets) GetTargetsGCP(logLevel *logrus.Logger) ([]Target, error) {
 	filters := [...]string{
 		"status = RUNNING",
 	}
@@ -22,7 +22,7 @@ func (ts Targets) GetTargetsGCP(loglevel *logrus.Logger) ([]Target, error) {
 		return ts, err
 	}
 	computeService, err := compute.New(c)
-	loglevel.Info("[gcp] Get list zones on project zingplayinternational-097")
+	logLevel.Info("[gcp] Get list zones on project zingplayinternational-097")
 	zoneListCall := computeService.Zones.List("zingplayinternational-097")
 	zoneList, err := zoneListCall.Do()
 	if err != nil {
@@ -31,13 +31,13 @@ func (ts Targets) GetTargetsGCP(loglevel *logrus.Logger) ([]Target, error) {
 	for _, zone := range zoneList.Items {
 		instanceListCall := computeService.Instances.List("zingplayinternational-097", zone.Name)
 		instanceListCall.Filter(strings.Join(filters[:], " "))
-		loglevel.Infof("[gcp] Get list instances in zone %s", zone.Name)
+		logLevel.Infof("[gcp] Get list instances in zone %s", zone.Name)
 		instanceList, err := instanceListCall.Do()
 		if err != nil {
-			loglevel.Error(err)
+			logLevel.Error(err)
 			continue
 		}
-		loglevel.Info("[gcp] Create list targets")
+		logLevel.Info("[gcp] Create list targets")
 		for _, instance := range instanceList.Items {
 			t := new(Target)
 			t.Labels = make(map[string]string)

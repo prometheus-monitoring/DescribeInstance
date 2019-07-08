@@ -11,26 +11,26 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func getCredentialValue(loglevel *logrus.Logger) (credValue credentials.Value, err error) {
+func getCredentialValue(logLevel *logrus.Logger) (credValue credentials.Value, err error) {
 	homeDir, _ := os.UserHomeDir()
 	credsDir := homeDir + "/.aws/credentials"
 	if _, err = os.Stat(credsDir); err == nil {
-		loglevel.Info("[aws] Get credential values")
+		logLevel.Info("[aws] Get credential values")
 		creds := credentials.NewSharedCredentials(credsDir, "default")
 		credValue, err = creds.Get()
 		if err != nil {
-			loglevel.Error("[aws] Cannot get credential values")
+			logLevel.Error("[aws] Cannot get credential values")
 			return credValue, err
 		}
 	}
 	return credValue, err
 }
 
-func (ts Targets) GetTargetsAWS(loglevel *logrus.Logger) ([]Target, error) {
-	credValue, err := getCredentialValue(loglevel)
+func (ts Targets) GetTargetsAWS(logLevel *logrus.Logger) ([]Target, error) {
+	credValue, err := getCredentialValue(logLevel)
 	if err == nil {
 		resolver := endpoints.DefaultResolver()
-		loglevel.Info("[aws] Resolve partitions")
+		logLevel.Info("[aws] Resolve partitions")
 		partitions := resolver.(endpoints.EnumPartitions).Partitions()
 		sess, err := session.NewSession(&aws.Config{
 			Credentials: credentials.NewStaticCredentialsFromCreds(credValue)},
@@ -47,7 +47,7 @@ func (ts Targets) GetTargetsAWS(loglevel *logrus.Logger) ([]Target, error) {
 					}
 					sess.Config.Region = aws.String(id)
 
-					loglevel.Infof("[aws] Create new session for get describe instances in region %s", *aws.String(id))
+					logLevel.Infof("[aws] Create new session for get describe instances in region %s", *aws.String(id))
 					ec2Svc := ec2.New(sess)
 
 					// Get only instances with status running
@@ -63,7 +63,7 @@ func (ts Targets) GetTargetsAWS(loglevel *logrus.Logger) ([]Target, error) {
 					if err != nil {
 						return ts, err
 					}
-					loglevel.Info("[aws] Create list targets")
+					logLevel.Info("[aws] Create list targets")
 					// Declared json info
 					for _, reservation := range output.Reservations {
 						for _, instance := range reservation.Instances {

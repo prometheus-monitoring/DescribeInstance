@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -11,6 +12,10 @@ import (
 	"github.com/prometheus-monitoring/DescribeInstance/lib"
 	"github.com/sirupsen/logrus"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
+)
+
+var (
+	locationsVN = [...]string{"HCM_QTSC_T1", "HCM_QTSC_T2", "Singapore"}
 )
 
 func writeFile(content []byte, dir string) error {
@@ -26,8 +31,8 @@ func ensureDir(dir string) error {
 func main() {
 	// New logger
 	logrus.SetFormatter(&logrus.TextFormatter{})
-	var loglevel = logrus.New()
-	loglevel.Out = os.Stdout
+	var logLevel = logrus.New()
+	logLevel.Out = os.Stdout
 
 	//Parse flag
 	app := kingpin.New(filepath.Base(os.Args[0]), "Script get describe instance from cloud server")
@@ -60,19 +65,19 @@ func main() {
 		}
 		go func() {
 			defer wg.Done()
-			targets, err := ts.GetTargetsAWS(loglevel)
+			targets, err := ts.GetTargetsAWS(logLevel)
 			if err == nil {
 				content, _ := json.MarshalIndent(targets, "", "\t")
-				filedir := desDir + "targets_aws.json"
-				loglevel.Info("Write all targets on aws to json file")
-				err = writeFile(content, filedir)
+				fileDir := desDir + "targets_aws.json"
+				logLevel.Info("Write all targets on aws to json file")
+				err = writeFile(content, fileDir)
 				if err != nil {
-					loglevel.Error(err)
+					logLevel.Error(err)
 				} else {
-					loglevel.Info("Write targets on datacenter vng completed")
+					logLevel.Info("Write targets on datacenter vng completed")
 				}
 			} else {
-				loglevel.Error(err)
+				logLevel.Error(err)
 			}
 		}()
 		if !strings.Contains(parsedCmd, "all") {
@@ -85,19 +90,19 @@ func main() {
 		}
 		go func() {
 			defer wg.Done()
-			targets, err := ts.GetTargetsGCP(loglevel)
+			targets, err := ts.GetTargetsGCP(logLevel)
 			if err == nil {
 				content, _ := json.MarshalIndent(targets, "", "\t")
-				filedir := desDir + "targets_gcp.json"
-				loglevel.Info("Write all targets on gcp to json file")
-				err = writeFile(content, filedir)
+				fileDir := desDir + "targets_gcp.json"
+				logLevel.Info("Write all targets on gcp to json file")
+				err = writeFile(content, fileDir)
 				if err != nil {
-					loglevel.Error(err)
+					logLevel.Error(err)
 				} else {
-					loglevel.Info("Write targets on datacenter vng completed")
+					logLevel.Info("Write targets on datacenter vng completed")
 				}
 			} else {
-				loglevel.Error(err)
+				logLevel.Error(err)
 			}
 		}()
 		if !strings.Contains(parsedCmd, "all") {
@@ -105,26 +110,35 @@ func main() {
 		}
 		fallthrough
 	case getFromVNGCmd.FullCommand():
-		if !strings.Contains(parsedCmd, "all") {
-			wg.Add(1)
-		}
-		go func() {
-			defer wg.Done()
-			targets, err := ts.GetTargetsVNG(loglevel)
+		// if !strings.Contains(parsedCmd, "all") {
+		// 	wg.Add(1)
+		// }
+		// go func() {
+		// 	defer wg.Done()
+		for _, location := range locationsVN {
+			targets, err := ts.GetTargetsVNG(logLevel, location)
 			if err == nil {
 				content, _ := json.MarshalIndent(targets, "", "\t")
-				filedir := desDir + "targets_vng.json"
-				loglevel.Info("Write all targets on datacenter vng to json file")
-				err = writeFile(content, filedir)
-				if err != nil {
-					loglevel.Error(err)
+				var fileDir string
+				if strings.Contains(location, "T1") {
+					fileDir = fmt.Sprintf("%stargets_vng_%s.json", desDir, "oldfarm")
+				} else if strings.Contains(location, "T2") {
+					fileDir = fmt.Sprintf("%stargets_vng_%s.json", desDir, "newfarm")
 				} else {
-					loglevel.Info("Write targets on datacenter vng completed")
+					fileDir = fmt.Sprintf("%stargets_vng_%s.json", desDir, "singapore")
+				}
+				logLevel.Info("Write all targets on datacenter vng to json file")
+				err = writeFile(content, fileDir)
+				if err != nil {
+					logLevel.Error(err)
+				} else {
+					logLevel.Info("Write targets on datacenter vng completed")
 				}
 			} else {
-				loglevel.Error(err)
+				logLevel.Error(err)
 			}
-		}()
+		}
+		// }()
 	}
 	wg.Wait()
 }
