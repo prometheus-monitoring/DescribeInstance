@@ -12,6 +12,7 @@ type Data struct {
 	VMServerName string `json:"VMServerName"`
 	ProductCode  string `json:"ProductAlias"`
 	NICS         []nic  `json:"NICS"`
+	Location     string `json:"location_code"`
 	// Owners       []se   `json:"technical_owner"`
 }
 
@@ -96,15 +97,8 @@ func (ts Targets) GetTargetsVNG(loglevel *logrus.Logger) ([]Target, error) {
 				}
 			}
 		}
-
-		addr := t.Labels["ip"] + ":11011"
-		if _, ok := t.Labels["ip"]; !ok {
-			if _, ok := t.Labels["ip_priv"]; ok {
-				addr = t.Labels["ip_priv"] + ":11011"
-			} else {
-				continue
-			}
-		}
+		t.Labels["location_code"] = "vng_" + data.Location
+		addr := t.Labels["ip_priv"] + ":11011"
 
 		t.Targets = append(t.Targets, addr)
 		ts = append(ts, *t)
