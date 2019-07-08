@@ -51,7 +51,7 @@ func (ts Targets) GetTargetsVNG(loglevel *logrus.Logger) ([]Target, error) {
 		return ts, err
 	}
 	loglevel.Info("[vng] Query data")
-	results, err := db.Query(`Select VMServerName, ProductAlias, NICS from allserverinfo
+	results, err := db.Query(`Select VMServerName, ProductAlias, LocationCode, NICS from allserverinfo
 														where NOT Data like '%truongln%'
 															and NOT Data like '%phongnvd%'
 															and	NOT Data like '%vihct%'`)
@@ -63,7 +63,7 @@ func (ts Targets) GetTargetsVNG(loglevel *logrus.Logger) ([]Target, error) {
 	for results.Next() {
 		var data Data
 		var nics string
-		err = results.Scan(&data.VMServerName, &data.ProductCode, &nics)
+		err = results.Scan(&data.VMServerName, &data.ProductCode, &data.LocationCode, &nics)
 		if err != nil {
 			panic(err.Error())
 		}
