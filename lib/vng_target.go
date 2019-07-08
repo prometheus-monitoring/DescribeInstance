@@ -12,7 +12,7 @@ type Data struct {
 	VMServerName string `json:"VMServerName"`
 	ProductCode  string `json:"ProductAlias"`
 	NICS         []nic  `json:"NICS"`
-	Location     string `json:"location_code"`
+	Location     string `json:"LocationCode"`
 	// Owners       []se   `json:"technical_owner"`
 }
 
