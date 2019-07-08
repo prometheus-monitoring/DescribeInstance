@@ -62,9 +62,7 @@ func (t *Target) append(d Data) Target {
 			}
 		}
 	}
-	t.Labels["location_code"] = "vng_" + d.Location
-	addr := t.Labels["ip_priv"] + ":11011"
-
+	addr := fmt.Sprintf("%s:%s", t.Labels["ip_priv"], ":11011")
 	t.Targets = append(t.Targets, addr)
 	return *t
 }
