@@ -41,7 +41,6 @@ func (ts Targets) GetTargetsGCP(logLevel *logrus.Logger) ([]Target, error) {
 		for _, instance := range instanceList.Items {
 			t := new(Target)
 			t.Labels = make(map[string]string)
-			t.Labels["zone"] = zone.Name
 			t.Labels["instance"] = instance.Name
 			t.Labels["product_code"] = "ZPTGSN"
 			t.Labels["ip"] = instance.NetworkInterfaces[0].AccessConfigs[0].NatIP
