@@ -1,0 +1,15 @@
+credentials:
+  aws: /.aws/credentials
+  gcp:
+  mysql:
+    remote_host: 61.28.251.123
+    user: discoverylocal
+    password: 1qaz8ik,
+    name: getlistserver_sdk
+
+filter:
+  match:
+    status: ["in_used"]
+  not_match:
+    product: ["MPS_DEV", "MTO_ShareSys", "GT_Devops", "FBS_Dev", "SO6_Access", "SO6_Payment"]
+    selv1: ["truongln", "vihct", "phongnvd"]
