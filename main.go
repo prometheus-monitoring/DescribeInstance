@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/prometheus-monitoring/DescribeInstance/config"
+	// "github.com/prometheus-monitoring/DescribeInstance/config"
 	"github.com/prometheus-monitoring/DescribeInstance/lib"
 	"github.com/sirupsen/logrus"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -36,8 +36,8 @@ func main() {
 	logLevel.Out = os.Stdout
 
 	// Read config
-	var conf config.Config
-	conf.NewConfig()
+	// var conf config.Config
+	// conf.NewConfig()
 
 	//Parse flag
 	app := kingpin.New(filepath.Base(os.Args[0]), "Script get describe instance from cloud server")
