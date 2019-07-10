@@ -39,7 +39,7 @@ type Config struct {
 
 func (conf *Config) NewConfig() {
 	dir, _ := os.Getwd()
-	data, err := ioutil.ReadFile(path.Join(dir, "config.yml"))
+	data, err := ioutil.ReadFile(path.Join(dir, "config/config.yml"))
 	if err != nil {
 		log.Fatal(err)
 	}

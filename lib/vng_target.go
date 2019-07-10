@@ -41,10 +41,15 @@ func connect() (*sql.DB, error) {
 
 func querydata(db *sql.DB, locationCode string) (*sql.Rows, error) {
 	queryStatement := fmt.Sprintf(`Select VMServerName, ProductAlias, LocationCode, NICS from allserverinfo
-																		where NOT Data like '%s'
+																		where status="%s"
+																		 	and NOT Data like '%s'
 																			and NOT Data like '%s'
 																			and	NOT Data like '%s'
-																			and LocationCode='%s'`, "%truongln%", "%phongnvd%", "%vihct%", locationCode)
+																			and LocationCode='%s'
+																			and ProductAlias NOT IN
+																				("MPS_DEV", "MTO_ShareSys", "GT_Devops",
+																				 "FBS_Dev", "SO6_Access", "SO6_Payment")`,
+		"in_used", "%truongln%", "%phongnvd%", "%vihct%", locationCode)
 	results, err := db.Query(queryStatement)
 	return results, err
 }
@@ -67,8 +72,7 @@ func (t *Target) append(d Data) Target {
 	return *t
 }
 
-func (ts Targets) GetTargetsVNG(logLevel *logrus.Logger, locationCode string, filter interface{}) ([]Target, error) {
-	fmt.Println("========", filter)
+func (ts Targets) GetTargetsVNG(logLevel *logrus.Logger, locationCode string) ([]Target, error) {
 	logLevel.Info("[vng] Establishing connection to database")
 	db, err := connect()
 	defer db.Close()

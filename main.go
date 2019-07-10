@@ -115,13 +115,13 @@ func main() {
 		}
 		fallthrough
 	case getFromVNGCmd.FullCommand():
-		// if !strings.Contains(parsedCmd, "all") {
-		// 	wg.Add(1)
-		// }
+		if !strings.Contains(parsedCmd, "all") {
+			wg.Add(1)
+		}
 		go func() {
 			defer wg.Done()
 			for _, location := range locationsVN {
-				targets, err := ts.GetTargetsVNG(logLevel, location, conf.Filter)
+				targets, err := ts.GetTargetsVNG(logLevel, location)
 				if err == nil {
 					content, _ := json.MarshalIndent(targets, "", "\t")
 					var fileDir string
