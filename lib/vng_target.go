@@ -67,7 +67,8 @@ func (t *Target) append(d Data) Target {
 	return *t
 }
 
-func (ts Targets) GetTargetsVNG(logLevel *logrus.Logger, locationCode string) ([]Target, error) {
+func (ts Targets) GetTargetsVNG(logLevel *logrus.Logger, locationCode string, filter interface{}) ([]Target, error) {
+	fmt.Println("========", filter)
 	logLevel.Info("[vng] Establishing connection to database")
 	db, err := connect()
 	defer db.Close()

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/prometheus-monitoring/DescribeInstance/config"
 	"github.com/prometheus-monitoring/DescribeInstance/lib"
 	"github.com/sirupsen/logrus"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -33,6 +34,10 @@ func main() {
 	logrus.SetFormatter(&logrus.TextFormatter{})
 	var logLevel = logrus.New()
 	logLevel.Out = os.Stdout
+
+	// Read config
+	var conf config.Config
+	conf.NewConfig()
 
 	//Parse flag
 	app := kingpin.New(filepath.Base(os.Args[0]), "Script get describe instance from cloud server")
@@ -116,7 +121,7 @@ func main() {
 		go func() {
 			defer wg.Done()
 			for _, location := range locationsVN {
-				targets, err := ts.GetTargetsVNG(logLevel, location)
+				targets, err := ts.GetTargetsVNG(logLevel, location, conf.Filter)
 				if err == nil {
 					content, _ := json.MarshalIndent(targets, "", "\t")
 					var fileDir string
