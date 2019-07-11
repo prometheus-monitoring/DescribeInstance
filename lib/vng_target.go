@@ -32,7 +32,7 @@ type network struct {
 	IP       string `json:"ip_address"`
 }
 
-func generateQuery(filter config.Filter) string {
+func generateQuery(filter config.Filter, location string) string {
 	conditions := []string{}
 	// Match
 	if len(filter.Match.Status) != 0 {
@@ -76,11 +76,11 @@ func generateQuery(filter config.Filter) string {
 			conditions = append(conditions, cond)
 		}
 	}
-	return fmt.Sprintf(`Select VMServerName, ProductAlias, LocationCode, NICS from allserverinfo where %s`, strings.Join(conditions, " and "))
+	return fmt.Sprintf(`Select VMServerName, ProductAlias, LocationCode, NICS from allserverinfo where LocationCode="%s" and %s`, location, strings.Join(conditions, " and "))
 }
 
 func querydata(db *sql.DB, locationCode string, filter config.Filter) (*sql.Rows, error) {
-	queryStatement := generateQuery(filter)
+	queryStatement := generateQuery(filter, locationCode)
 	results, err := db.Query(queryStatement)
 	return results, err
 }
