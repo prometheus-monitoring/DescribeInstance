@@ -2,6 +2,7 @@ package lib
 
 import (
 	"os"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -68,6 +69,9 @@ func (ts Targets) GetTargetsAWS(logLevel *logrus.Logger) ([]Target, error) {
 					for _, reservation := range output.Reservations {
 						for _, instance := range reservation.Instances {
 							t := new(Target)
+							if strings.Contains(*instance.Tags[0].Value, "AutoScaling") {
+								continue
+							}
 							t.Labels = make(map[string]string)
 							// t.Labels["zone"] = *instance.Placement.AvailabilityZone
 							t.Labels["instance"] = *instance.Tags[0].Value
