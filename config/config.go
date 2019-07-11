@@ -2,10 +2,8 @@ package config
 
 import (
 	"io/ioutil"
-	"log"
-	"os"
-	"path"
 
+	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
 
@@ -38,14 +36,13 @@ type Config struct {
 	Filter Filter      `yaml:"filter"`
 }
 
-func (conf *Config) NewConfig() {
-	dir, _ := os.Getwd()
-	data, err := ioutil.ReadFile(path.Join(dir, "config/config.yml"))
+func (conf *Config) NewConfig(logLevel *logrus.Logger, confPath string) {
+	data, err := ioutil.ReadFile(confPath)
 	if err != nil {
-		log.Fatal(err)
+		logLevel.Fatal(err)
 	}
 	err = yaml.Unmarshal((data), &conf)
 	if err != nil {
-		log.Fatalf("cannot unmarshal data: %v", err)
+		logLevel.Fatalf("cannot unmarshal data: %v", err)
 	}
 }

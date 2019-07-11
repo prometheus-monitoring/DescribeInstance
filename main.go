@@ -35,14 +35,10 @@ func main() {
 	var logLevel = logrus.New()
 	logLevel.Out = os.Stdout
 
-	// Read config
-	var conf config.Config
-	conf.NewConfig()
-
 	//Parse flag
 	app := kingpin.New(filepath.Base(os.Args[0]), "Script get describe instance from cloud server")
 	app.HelpFlag.Short('h')
-
+	configPath := app.Flag("config.file", "DescribeInstance configuration file path.").Default("DecribeInstance.yml").String()
 	getFromAllCmd := app.Command("all", "Get describe instance from all aws, gcp, vng")
 	getFromAWSCmd := app.Command("aws", "Get describe instance from aws")
 	getFromGCPCmd := app.Command("gcp", "Get describe instance from gcp")
@@ -52,6 +48,10 @@ func main() {
 	// 	"The config files to check.",
 	// ).Required().ExistingFiles()
 	parsedCmd := kingpin.MustParse(app.Parse(os.Args[1:]))
+	fmt.Println(*configPath)
+	// Read config
+	var conf config.Config
+	conf.NewConfig(logLevel, *configPath)
 
 	// New targets
 	ts := new(lib.Targets)
