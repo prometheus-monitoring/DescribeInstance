@@ -13,3 +13,6 @@
 
 # file json generated
 *.json
+
+# File config
+config.yml

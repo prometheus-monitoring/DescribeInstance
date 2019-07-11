@@ -9,23 +9,24 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type filter struct {
-	Match struct {
-		Status []string `yaml:"status"`
-	} `yaml:"match"`
-	NotMatch struct {
-		Prod  []string `yaml:"product"`
-		SELv1 []string `yaml:"selv1"`
-	} `yaml:"not_match"`
+type Filter struct {
+	Match    filterEle `yaml:"match"`
+	NotMatch filterEle `yaml:"not_match"`
+}
+type filterEle struct {
+	Status []string `yaml:"status"`
+	Prod   []string `yaml:"product"`
+	SELv1  []string `yaml:"selv1"`
+	IP     []string `yaml:"ip"`
 }
 
-type credentials struct {
+type Credentials struct {
 	AWS   string `yaml:"aws"`
 	GCP   string `yaml:"gcp"`
-	MySQL mysql  `yaml:"mysql"`
+	MySQL Mysql  `yaml:"mysql"`
 }
 
-type mysql struct {
+type Mysql struct {
 	DBname     string `yaml:"name"`
 	RemoteHost string `yaml:"remote_host"`
 	User       string `yaml:"user"`
@@ -33,8 +34,8 @@ type mysql struct {
 }
 
 type Config struct {
-	Creds  credentials `yaml:"credentials"`
-	Filter filter      `yaml:"filter"`
+	Creds  Credentials `yaml:"credentials"`
+	Filter Filter      `yaml:"filter"`
 }
 
 func (conf *Config) NewConfig() {
