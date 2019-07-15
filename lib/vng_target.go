@@ -51,7 +51,7 @@ func generateQuery(filter config.Filter, location string) string {
 	}
 	if len(filter.Match.IP) != 0 {
 		for _, ip := range filter.Match.IP {
-			cond := fmt.Sprintf(`NICS like '%%%s%%'`, ip)
+			cond := fmt.Sprintf(`NICS like '%%"%s"%%'`, ip)
 			conditions = append(conditions, cond)
 		}
 	}
@@ -72,7 +72,7 @@ func generateQuery(filter config.Filter, location string) string {
 	}
 	if len(filter.NotMatch.IP) != 0 {
 		for _, ip := range filter.NotMatch.IP {
-			cond := fmt.Sprintf(`NICS not like '%%%s%%'`, ip)
+			cond := fmt.Sprintf(`NICS not like '%%"%s"%%'`, ip)
 			conditions = append(conditions, cond)
 		}
 	}
