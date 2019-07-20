@@ -79,7 +79,7 @@ func (ts Targets) GetTargetsAWS(logLevel *logrus.Logger) ([]Target, error) {
 							t.Labels["ip"] = *instance.PublicIpAddress
 							t.Labels["ip_priv"] = *instance.PrivateIpAddress
 							addr := t.Labels["ip"] + ":11011"
-							t.Targets = append(t.Targets, addr)
+							t.Addrs = append(t.Addrs, addr)
 							ts = append(ts, *t)
 						}
 					}
