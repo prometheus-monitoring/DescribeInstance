@@ -15,21 +15,22 @@ import (
 type Data struct {
 	VMServerName string `json:"VMServerName"`
 	ProductCode  string `json:"ProductAlias"`
-	NICS         []nic  `json:"NICS"`
-	Location     string `json:"LocationCode"`
-	// Owners       []se   `json:"technical_owner"`
-}
-
-type nic struct {
-	Card string    `json:"card"`
-	MAC  string    `json:"mac_address"`
-	Nets []network `json:"network"`
-}
-
-type network struct {
-	VlanID   string `json:"vlan_id"`
-	VlanType string `json:"vlan_type"`
-	IP       string `json:"ip_address"`
+	NICS         []struct {
+		Card string `json:"card"`
+		MAC  string `json:"mac_address"`
+		Nets []struct {
+			VlanID   string `json:"vlan_id"`
+			VlanType string `json:"vlan_type"`
+			IP       string `json:"ip_address"`
+		} `json:"network"`
+	} `json:"NICS"`
+	Location string `json:"LocationCode"`
+	Data     struct {
+		Owners []struct {
+			Role string   `json:"role"`
+			Name []string `json:"users"`
+		} `json:"technical_owner"`
+	} `json:"Data"`
 }
 
 func generateQuery(filter config.Filter, location string) string {
@@ -43,12 +44,12 @@ func generateQuery(filter config.Filter, location string) string {
 		cond := fmt.Sprintf(`ProductAlias in ("%s")`, strings.Join(filter.Match.Prod, `", "`))
 		conditions = append(conditions, cond)
 	}
-	if len(filter.Match.SELv1) != 0 {
-		for _, se := range filter.Match.SELv1 {
-			cond := fmt.Sprintf(`Data like '%%%s%%'`, se)
-			conditions = append(conditions, cond)
-		}
-	}
+	// if len(filter.Match.SELv1) != 0 {
+	// 	for _, se := range filter.Match.SELv1 {
+	// 		cond := fmt.Sprintf(`Data like '%%%s%%'`, se)
+	// 		conditions = append(conditions, cond)
+	// 	}
+	// }
 	if len(filter.Match.IP) != 0 {
 		for _, ip := range filter.Match.IP {
 			cond := fmt.Sprintf(`NICS like '%%"%s"%%'`, ip)
@@ -64,32 +65,42 @@ func generateQuery(filter config.Filter, location string) string {
 		cond := fmt.Sprintf(`ProductAlias not in ("%s")`, strings.Join(filter.NotMatch.Prod, `", "`))
 		conditions = append(conditions, cond)
 	}
-	if len(filter.NotMatch.SELv1) != 0 {
-		for _, se := range filter.NotMatch.SELv1 {
-			cond := fmt.Sprintf(`Data not like '%%%s%%'`, se)
-			conditions = append(conditions, cond)
-		}
-	}
+	// if len(filter.NotMatch.SELv1) != 0 {
+	// 	for _, se := range filter.NotMatch.SELv1 {
+	// 		cond := fmt.Sprintf(`Data not like '%%%s%%'`, se)
+	// 		conditions = append(conditions, cond)
+	// 	}
+	// }
 	if len(filter.NotMatch.IP) != 0 {
 		for _, ip := range filter.NotMatch.IP {
 			cond := fmt.Sprintf(`NICS not like '%%"%s"%%'`, ip)
 			conditions = append(conditions, cond)
 		}
 	}
-	return fmt.Sprintf(`Select VMServerName, ProductAlias, LocationCode, NICS from allserverinfo where LocationCode="%s" and %s`, location, strings.Join(conditions, " and "))
+	return fmt.Sprintf(`Select VMServerName, ProductAlias, LocationCode, NICS, Data from allserverinfo where LocationCode="%s" and %s`, location, strings.Join(conditions, " and "))
 }
 
-func querydata(db *sql.DB, locationCode string, filter config.Filter) (*sql.Rows, error) {
+func queryData(db *sql.DB, locationCode string, filter config.Filter) (*sql.Rows, error) {
 	queryStatement := generateQuery(filter, locationCode)
 	results, err := db.Query(queryStatement)
 	return results, err
 }
 
-func elementExist(slice interface{}, item interface{}) bool {
-	s := reflect.ValueOf(slice)
-	for i := 0; i < s.Len(); i++ {
-		if s.Index(i).Interface() == item {
-			return true
+func seIsExist(listSE interface{}, SE interface{}) bool {
+	ls := reflect.ValueOf(listSE)
+	for i := 0; i < ls.Len(); i++ {
+		if reflect.TypeOf(SE).Kind().String() != "slice" {
+			if strings.Contains(SE.(string), ls.Index(i).String()) {
+				fmt.Println("$$$$$$$$$$$$$$$$$")
+				return true
+			}
+		} else {
+			se := reflect.ValueOf(SE)
+			for j := 0; j < se.Len(); j++ {
+				if strings.Contains(se.Index(j).String(), ls.Index(i).String()) {
+					return true
+				}
+			}
 		}
 	}
 	return false
@@ -131,7 +142,7 @@ func (ts Targets) GetTargetsVNG(logLevel *logrus.Logger, db *sql.DB, locationCod
 	}
 
 	logLevel.Info("[vng] Query data")
-	results, err := querydata(db, locationCode, filter)
+	results, err := queryData(db, locationCode, filter)
 	if err != nil {
 		return ts, err
 	}
@@ -139,17 +150,41 @@ func (ts Targets) GetTargetsVNG(logLevel *logrus.Logger, db *sql.DB, locationCod
 	logLevel.Info("[vng] Create list targets")
 	for results.Next() {
 		var data Data
-		var nics string
-		err = results.Scan(&data.VMServerName, &data.ProductCode, &data.Location, &nics)
+		var nics, d string
+		err = results.Scan(&data.VMServerName, &data.ProductCode, &data.Location, &nics, &d)
 		if err != nil {
-			panic(err.Error())
+			logLevel.Error(err.Error())
+			continue
 		}
+		// Unmarshal Nics
 		err = json.Unmarshal([]byte(nics), &data.NICS)
 		if err != nil {
-			panic(err.Error())
+			logLevel.Error(err.Error())
+			continue
 		}
-		t := new(Target)
-		ts = append(ts, t.append(data))
+		//Unmarshal Owner in Data json
+		err = json.Unmarshal([]byte(strings.ReplaceAll(d, "\n", "\\n")), &data.Data)
+		if err != nil {
+			logLevel.Error(err.Error())
+			continue
+		}
+		for _, owner := range data.Data.Owners {
+			t := new(Target)
+			if strings.Contains(owner.Role, "Level 1") {
+				if len(filter.NotMatch.SELv1) != 0 {
+					if seIsExist(filter.NotMatch.SELv1, owner.Name) {
+						continue
+					}
+					ts = append(ts, t.append(data))
+				} else if len(filter.Match.SELv1) != 0 {
+					if seIsExist(filter.Match.SELv1, owner.Name) {
+						ts = append(ts, t.append(data))
+					}
+				} else {
+					ts = append(ts, t.append(data))
+				}
+			}
+		}
 	}
 	return ts, err
 }

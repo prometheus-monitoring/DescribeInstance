@@ -78,7 +78,7 @@ func main() {
 					logLevel.Error(err)
 				}
 			}()
-			if *datacenter == "all" {
+			if *datacenter != "all" {
 				break
 			}
 			fallthrough
@@ -103,7 +103,7 @@ func main() {
 					logLevel.Error(err)
 				}
 			}()
-			if *datacenter == "all" {
+			if *datacenter != "all" {
 				break
 			}
 			fallthrough
