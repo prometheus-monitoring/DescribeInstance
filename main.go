@@ -19,7 +19,7 @@ var (
 	configPath  = kingpin.Flag("config.file", "DescribeInstance configuration file path.").Short(rune('c')).Default("config.yml").String()
 	manual      = kingpin.Flag("add.manual", "Add targets munual").Short(rune('m')).Default("false").Bool()
 	datacenter  = kingpin.Flag("datacenter", "Choose data center:\n\t all: Get all targets from the data center include aws, gcp, vng\n\t aws: Get all targets from the amazone web services\n\t gcp: Get all targets from the google cloud\n\t vng: Get all targets from the VN data center(If add target manual please choose vng_newfarm, vng_oldfarm or vng_singapore)").Short(rune('d')).String()
-	destPath = kingpin.Flag("path", "Destination directory store target files").Short(rune('p')).Default("/etc/prometheus/targets/").String()
+	destPath    = kingpin.Flag("path", "Destination directory store target files").Short(rune('p')).Default("/etc/prometheus/targets/").String()
 )
 
 func writeFile(content []byte, dir string) error {
@@ -49,10 +49,9 @@ func main() {
 	ts := new(lib.Targets)
 	var wg sync.WaitGroup
 
-	desDir := "/etc/prometheus/targets/"
-	ensureDir(desDir)
+	ensureDir(*destPath)
 	if *manual {
-		ts.NewTargetsManual(*datacenter, desDir, logLevel)
+		ts.NewTargetsManual(*datacenter, *destPath, logLevel)
 	} else {
 		switch *datacenter {
 		case "all":
@@ -67,7 +66,7 @@ func main() {
 				targets, err := ts.GetTargetsAWS(logLevel)
 				if err == nil {
 					content, _ := json.MarshalIndent(targets, "", "\t")
-					fileDir := desDir + "targets_aws.json"
+					fileDir := *destPath + "targets_aws.json"
 					logLevel.Info("Write all targets on aws to json file")
 					err = writeFile(content, fileDir)
 					if err != nil {
@@ -92,7 +91,7 @@ func main() {
 				targets, err := ts.GetTargetsGCP(logLevel)
 				if err == nil {
 					content, _ := json.MarshalIndent(targets, "", "\t")
-					fileDir := desDir + "targets_gcp.json"
+					fileDir := *destPath + "targets_gcp.json"
 					logLevel.Info("Write all targets on gcp to json file")
 					err = writeFile(content, fileDir)
 					if err != nil {
@@ -126,11 +125,11 @@ func main() {
 						content, _ := json.MarshalIndent(targets, "", "\t")
 						var fileDir string
 						if strings.Contains(location, "T1") {
-							fileDir = fmt.Sprintf("%stargets_vng_%s.json", desDir, "oldfarm")
+							fileDir = fmt.Sprintf("%stargets_vng_%s.json", *destPath, "oldfarm")
 						} else if strings.Contains(location, "T2") {
-							fileDir = fmt.Sprintf("%stargets_vng_%s.json", desDir, "newfarm")
+							fileDir = fmt.Sprintf("%stargets_vng_%s.json", *destPath, "newfarm")
 						} else {
-							fileDir = fmt.Sprintf("%stargets_vng_%s.json", desDir, "singapore")
+							fileDir = fmt.Sprintf("%stargets_vng_%s.json", *destPath, "singapore")
 						}
 						logLevel.Info("Write all targets on datacenter vng to json file")
 						err = writeFile(content, fileDir)
