@@ -34,9 +34,15 @@ func ensureDir(dir string) error {
 
 func main() {
 	// New logger
-	logrus.SetFormatter(&logrus.TextFormatter{})
-	var logLevel = logrus.New()
-	logLevel.Out = os.Stdout
+	logLevel := &logrus.Logger{
+		Out:   os.Stderr,
+		Level: logrus.TraceLevel,
+		Formatter: &logrus.TextFormatter{
+			FullTimestamp:          true,
+			TimestampFormat:        "2006/01/02 15:04",
+			ForceColors:            true,
+			DisableLevelTruncation: true},
+	}
 
 	//Parse flag
 	kingpin.HelpFlag.Short(rune('h'))
