@@ -19,6 +19,7 @@ var (
 	configPath  = kingpin.Flag("config.file", "DescribeInstance configuration file path.").Short(rune('c')).Default("config.yml").String()
 	manual      = kingpin.Flag("add.manual", "Add targets munual").Short(rune('m')).Default("false").Bool()
 	datacenter  = kingpin.Flag("datacenter", "Choose data center:\n\t all: Get all targets from the data center include aws, gcp, vng\n\t aws: Get all targets from the amazone web services\n\t gcp: Get all targets from the google cloud\n\t vng: Get all targets from the VN data center(If add target manual please choose vng_newfarm, vng_oldfarm or vng_singapore)").Short(rune('d')).String()
+	destPath = kingpin.Flag("path", "Destination directory store target files").Short(rune('p')).Default("/etc/prometheus/targets/").String()
 )
 
 func writeFile(content []byte, dir string) error {
