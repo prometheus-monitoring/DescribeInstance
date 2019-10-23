@@ -15,6 +15,7 @@ import (
 type Data struct {
 	VMServerName string `json:"VMServerName"`
 	ProductCode  string `json:"ProductAlias"`
+	SubProduct   string `json:"subproduct"`
 	NICS         []struct {
 		Card string `json:"card"`
 		MAC  string `json:"mac_address"`
@@ -77,7 +78,7 @@ func generateQuery(filter config.Filter, location string) string {
 			conditions = append(conditions, cond)
 		}
 	}
-	return fmt.Sprintf(`Select VMServerName, ProductAlias, LocationCode, NICS, Data from allserverinfo where LocationCode="%s" and %s`, location, strings.Join(conditions, " and "))
+	return fmt.Sprintf(`Select VMServerName, ProductAlias, subproduct, LocationCode, NICS, Data from allserverinfo where LocationCode="%s" and %s`, location, strings.Join(conditions, " and "))
 }
 
 func queryData(db *sql.DB, locationCode string, filter config.Filter) (*sql.Rows, error) {
@@ -109,6 +110,7 @@ func (t *Target) append(d Data) Target {
 	t.Labels = make(map[string]string)
 	t.Labels["instance"] = d.VMServerName
 	t.Labels["product_code"] = d.ProductCode
+	t.Labels["subproduct"] = d.SubProduct
 	for _, nic := range d.NICS {
 		for _, net := range nic.Nets {
 			if _, ok := t.Labels["ip"]; !ok && net.VlanType == "public" {
@@ -150,7 +152,7 @@ func (ts Targets) GetTargetsVNG(logLevel *logrus.Logger, db *sql.DB, locationCod
 	for results.Next() {
 		var data Data
 		var nics, d string
-		err = results.Scan(&data.VMServerName, &data.ProductCode, &data.Location, &nics, &d)
+		err = results.Scan(&data.VMServerName, &data.ProductCode, &data.SubProduct, &data.Location, &nics, &d)
 		if err != nil {
 			logLevel.Error(err.Error())
 			continue

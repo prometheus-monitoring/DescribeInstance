@@ -49,6 +49,7 @@ func (ts Targets) GetTargetsGCP(logLevel *logrus.Logger, filter config.Filter) (
 			t.Labels = make(map[string]string)
 			t.Labels["instance"] = instance.Name
 			t.Labels["product_code"] = "ZPTGSN"
+			t.Labels["subproduct"] = instance.Labels["subproduct"]
 			t.Labels["ip"] = instance.NetworkInterfaces[0].AccessConfigs[0].NatIP
 			t.Labels["ip_priv"] = instance.NetworkInterfaces[0].NetworkIP
 			addr := t.Labels["ip"] + ":11011"

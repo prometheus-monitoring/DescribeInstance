@@ -28,6 +28,15 @@ func getCredentialValue(logLevel *logrus.Logger) (credValue credentials.Value, e
 	return credValue, err
 }
 
+func getTagValue(tagName string, tagList []*ec2.Tag) (string){
+	for _, tag := range tagList{
+		if *tag.Key == tagName {
+			return *tag.Value
+		}
+	}
+	return ""
+}
+
 func (ts Targets) GetTargetsAWS(logLevel *logrus.Logger, filter config.Filter) ([]Target, error) {
 	credValue, err := getCredentialValue(logLevel)
 	if err == nil {
@@ -80,8 +89,9 @@ func (ts Targets) GetTargetsAWS(logLevel *logrus.Logger, filter config.Filter) (
 							}
 							t.Labels = make(map[string]string)
 							// t.Labels["zone"] = *instance.Placement.AvailabilityZone
-							t.Labels["instance"] = *instance.Tags[0].Value
+							t.Labels["instance"] = getTagValue("Name", instance.Tags)
 							t.Labels["product_code"] = "ZPTGSN"
+							t.Labels["subproduct"] = getTagValue("subproduct", instance.Tags)
 							t.Labels["ip"] = *instance.PublicIpAddress
 							t.Labels["ip_priv"] = *instance.PrivateIpAddress
 							addr := t.Labels["ip"] + ":11011"
