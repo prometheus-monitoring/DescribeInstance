@@ -69,7 +69,7 @@ func main() {
 			}
 			go func() {
 				defer wg.Done()
-				targets, err := ts.GetTargetsAWS(logLevel)
+				targets, err := ts.GetTargetsAWS(logLevel, conf.AWS.Filter)
 				if err == nil {
 					content, _ := json.MarshalIndent(targets, "", "\t")
 					fileDir := *destPath + "targets_aws.json"
@@ -94,7 +94,7 @@ func main() {
 			}
 			go func() {
 				defer wg.Done()
-				targets, err := ts.GetTargetsGCP(logLevel)
+				targets, err := ts.GetTargetsGCP(logLevel, conf.GCP.Filter)
 				if err == nil {
 					content, _ := json.MarshalIndent(targets, "", "\t")
 					fileDir := *destPath + "targets_gcp.json"
@@ -120,13 +120,13 @@ func main() {
 			go func() {
 				defer wg.Done()
 				logLevel.Info("[vng] Establishing connection to database")
-				db, err := ts.Connect(conf.Creds.MySQL)
+				db, err := ts.Connect(conf.VNG.MySQL)
 				defer db.Close()
 				if err != nil {
 					logLevel.Panic(err)
 				}
 				for _, location := range locationsVN {
-					targets, err := ts.GetTargetsVNG(logLevel, db, location, conf.Filter)
+					targets, err := ts.GetTargetsVNG(logLevel, db, location, conf.VNG.Filter)
 					if err == nil {
 						content, _ := json.MarshalIndent(targets, "", "\t")
 						var fileDir string

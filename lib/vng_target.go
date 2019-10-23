@@ -91,7 +91,6 @@ func seIsExist(listSE interface{}, SE interface{}) bool {
 	for i := 0; i < ls.Len(); i++ {
 		if reflect.TypeOf(SE).Kind().String() != "slice" {
 			if strings.Contains(SE.(string), ls.Index(i).String()) {
-				fmt.Println("$$$$$$$$$$$$$$$$$")
 				return true
 			}
 		} else {
@@ -128,8 +127,8 @@ func (t *Target) append(d Data) Target {
 	return *t
 }
 
-func (ts Targets) Connect(cred config.Mysql) (*sql.DB, error) {
-	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/%s", cred.User, cred.Pass, cred.RemoteHost, cred.DBname))
+func (ts Targets) Connect(confMySQL config.InfoMySQL) (*sql.DB, error) {
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/%s", confMySQL.User, confMySQL.Pass, confMySQL.RemoteHost, confMySQL.DBname))
 	return db, err
 }
 

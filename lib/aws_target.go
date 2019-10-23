@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/prometheus-monitoring/DescribeInstance/config"
 	"github.com/sirupsen/logrus"
 )
 
@@ -27,7 +28,7 @@ func getCredentialValue(logLevel *logrus.Logger) (credValue credentials.Value, e
 	return credValue, err
 }
 
-func (ts Targets) GetTargetsAWS(logLevel *logrus.Logger) ([]Target, error) {
+func (ts Targets) GetTargetsAWS(logLevel *logrus.Logger, filter config.Filter) ([]Target, error) {
 	credValue, err := getCredentialValue(logLevel)
 	if err == nil {
 		resolver := endpoints.DefaultResolver()
@@ -71,6 +72,11 @@ func (ts Targets) GetTargetsAWS(logLevel *logrus.Logger) ([]Target, error) {
 							t := new(Target)
 							if strings.Contains(*instance.Tags[0].Value, "AutoScaling") {
 								continue
+							}
+							if len(filter.NotMatch.IP) != 0 {
+								if ExistIPFilter(*instance.PublicIpAddress, filter.NotMatch.IP) || ExistIPFilter(*instance.PrivateIpAddress, filter.NotMatch.IP) {
+									continue
+								}
 							}
 							t.Labels = make(map[string]string)
 							// t.Labels["zone"] = *instance.Placement.AvailabilityZone

@@ -24,6 +24,15 @@ func writeFile(content []byte, dir string) error {
 	return err
 }
 
+func ExistIPFilter(ip string, ipList []string) bool {
+	for _, i := range ipList {
+		if ip == i {
+			return true
+		}
+	}
+	return false
+}
+
 func (ts Targets) AddManual(dc string, logLevel *logrus.Logger) []Target {
 	logLevel.Info("Add targets manual")
 	if dc == "all" || dc == "" {

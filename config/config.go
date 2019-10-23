@@ -18,22 +18,23 @@ type filterEle struct {
 	IP     []string `yaml:"ip"`
 }
 
-type Credentials struct {
-	AWS   string `yaml:"aws"`
-	GCP   string `yaml:"gcp"`
-	MySQL Mysql  `yaml:"mysql"`
+type InfoCloud struct {
+	CredentialsPath string    `yaml:"credentials_path"`
+	MySQL           InfoMySQL `yaml:"mysql"`
+	Filter          Filter    `yaml:"filter"`
 }
 
-type Mysql struct {
+type InfoMySQL struct {
 	DBname     string `yaml:"name"`
+	Pass       string `yaml:"password"`
 	RemoteHost string `yaml:"remote_host"`
 	User       string `yaml:"user"`
-	Pass       string `yaml:"password"`
 }
 
 type Config struct {
-	Creds  Credentials `yaml:"credentials"`
-	Filter Filter      `yaml:"filter"`
+	AWS InfoCloud `yaml:"aws"`
+	GCP InfoCloud `yaml:"gcp"`
+	VNG InfoCloud `yaml:"vng"`
 }
 
 func (conf *Config) NewConfig(logLevel *logrus.Logger, confPath string) {

@@ -8,9 +8,10 @@ import (
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/compute/v1"
+	"github.com/prometheus-monitoring/DescribeInstance/config"
 )
 
-func (ts Targets) GetTargetsGCP(logLevel *logrus.Logger) ([]Target, error) {
+func (ts Targets) GetTargetsGCP(logLevel *logrus.Logger, filter config.Filter) ([]Target, error) {
 	filters := [...]string{
 		"status = RUNNING",
 	}
@@ -39,6 +40,11 @@ func (ts Targets) GetTargetsGCP(logLevel *logrus.Logger) ([]Target, error) {
 		}
 		logLevel.Info("[gcp] Create list targets")
 		for _, instance := range instanceList.Items {
+			if(len(filter.NotMatch.IP)!=0){
+					if ExistIPFilter(instance.NetworkInterfaces[0].AccessConfigs[0].NatIP, filter.NotMatch.IP) || ExistIPFilter( instance.NetworkInterfaces[0].NetworkIP, filter.NotMatch.IP){
+						continue
+				}
+			}
 			t := new(Target)
 			t.Labels = make(map[string]string)
 			t.Labels["instance"] = instance.Name
